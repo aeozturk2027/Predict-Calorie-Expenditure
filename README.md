@@ -1,43 +1,43 @@
 # 🏋️ Calories Burn Prediction (Kaggle Playground S5E5)
 
-Bu proje, Kaggle'ın **[Playground Series S5E5](https://www.kaggle.com/competitions/playground-series-s5e5/overview)** yarışması için geliştirilmiş bir **kalori tahmin modeli** içerir.  
-Amaç, verilen fizyolojik ve aktivite verilerinden yola çıkarak yakılan kaloriyi mümkün olan en düşük hata ile tahmin etmektir.
+This project was developed for the **[Kaggle Playground Series S5E5](https://www.kaggle.com/competitions/playground-series-s5e5/overview)** competition.  
+The goal is to predict the calories burned based on physiological and activity data, achieving the lowest possible error.
 
 ---
 
-## 📂 Proje Adımları
+## 📂 Project Steps
 
-### 1️⃣ Veri Keşfi (EDA)
+### 1️⃣ Exploratory Data Analysis (EDA)
 - Train: `(750,000 x 9)`  
 - Test: `(250,000 x 8)`  
-- Eksik veri yok, kategorik sütun: `Sex`  
-- Sayısal özellikler: `Age`, `Height`, `Weight`, `Duration`, `Heart_Rate`, `Body_Temp`
-- Hedef değişken: `Calories`
-- Korelasyon analizi → en yüksek korelasyon **`Duration`** ve **`Heart_Rate`** ile
+- No missing values, categorical column: `Sex`  
+- Numerical features: `Age`, `Height`, `Weight`, `Duration`, `Heart_Rate`, `Body_Temp`
+- Target variable: `Calories`
+- Correlation analysis → highest correlation with **`Duration`** and **`Heart_Rate`**
 
 ---
 
 ### 2️⃣ Feature Engineering (FE)
 - **BMI** = `Weight / (Height/100)^2`
 - **Intensity** = `Duration * Heart_Rate`
-- `log1p(Calories)` dönüşümü → RMSLE / MSLE ile uyumlu hata ölçümü
-- Sayısal ve kategorik veriler **ColumnTransformer** ile işlendi  
-  - Sayısal: `passthrough`  
-  - Kategorik: One-Hot Encoding (`drop='first'`)
+- `log1p(Calories)` transformation → compatible with RMSLE / MSLE metric
+- Numerical & categorical preprocessing via **ColumnTransformer**:
+  - Numerical: `passthrough`  
+  - Categorical: One-Hot Encoding (`drop='first'`)
 
 ---
 
-### 3️⃣ Modelleme
-- Ana model: **XGBoost Regressor**
-- Hedef hata metriği: **RMSLE**
-- **StratifiedKFold** (5-fold) kullanıldı → hedef değer log1p sonrası bin’lenerek stratify edildi
-- **Early Stopping**: 100 tur gelişme olmazsa durdurma
+### 3️⃣ Modeling
+- Main model: **XGBoost Regressor**
+- Evaluation metric: **RMSLE**
+- **StratifiedKFold** (5-fold) → target values binned after log1p for stratification
+- **Early Stopping**: stop if no improvement for 100 rounds
 
 ---
 
-### 4️⃣ Hiperparametre Optimizasyonu
-- **Optuna** ile parametre arama (20 trial)
-- Aranan parametreler:
+### 4️⃣ Hyperparameter Optimization
+- **Optuna** for parameter search (20 trials)
+- Parameters tuned:
   - `n_estimators`
   - `learning_rate`
   - `max_depth`
@@ -46,12 +46,12 @@ Amaç, verilen fizyolojik ve aktivite verilerinden yola çıkarak yakılan kalor
   - `colsample_bytree`
   - `reg_lambda`, `reg_alpha`
   - `gamma`
-- En iyi parametre seti CV RMSLE’de ciddi düşüş sağladı.
+- Best parameter set significantly reduced CV RMSLE.
 
 ---
 
-### 5️⃣ Sonuçlar
-| Adım | CV RMSLE | Kaggle Public LB | Kaggle Private LB |
+### 5️⃣ Results
+| Step | CV RMSLE | Kaggle Public LB | Kaggle Private LB |
 |------|----------|------------------|-------------------|
 | Ridge (baseline) | 0.1799 | - | - |
 | XGBoost (OHE) | 0.0603 | - | - |
@@ -59,23 +59,15 @@ Amaç, verilen fizyolojik ve aktivite verilerinden yola çıkarak yakılan kalor
 
 ---
 
-### 6️⃣ Çıkarımlar
-- **log1p / expm1 dönüşümü** RMSLE uyumlu tahmin için kritik
-- **Feature engineering** (BMI, Intensity) hatayı ciddi düşürdü
-- **StratifiedKFold** küçük target değerlerini koruyarak daha kararlı CV sağladı
-- CV ve Kaggle skorları farklı çıkabilir → mutlaka hold-out testi yapılmalı
-- Hiperparametre optimizasyonunda fazla trial daha iyi sonuç verebilir ama zaman maliyeti var
+### 6️⃣ Key Takeaways
+- **log1p / expm1 transformation** is critical when working with RMSLE
+- **Feature engineering** (BMI, Intensity) led to significant error reduction
+- **StratifiedKFold** preserved the distribution of small target values for stable CV
+- CV and Kaggle LB scores may differ → hold-out validation is essential
+- More Optuna trials may yield better results but increase runtime
 
 ---
 
-## 🚀 Kullanım
 
-```bash
-# Gerekli paketleri yükle
-pip install -r requirements.txt
-
-# Eğitim ve tahmin
-python train.py
-
-# Submission dosyası oluşturma
+# Generate submission file
 python predict.py
