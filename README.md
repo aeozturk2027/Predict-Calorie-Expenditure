@@ -68,6 +68,3 @@ The goal is to predict the calories burned based on physiological and activity d
 
 ---
 
-
-# Generate submission file
-python predict.py
